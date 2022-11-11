@@ -1,13 +1,15 @@
 import firebase_admin
 from firebase_admin import firestore
+import serial
+import time
 
 cred_obj = firebase_admin.credentials.Certificate('./years-1264e-firebase-adminsdk-h3c89-737fc7d7fc.json')
 default_app = firebase_admin.initialize_app(cred_obj)
 db = firestore.client()
 
-latitude = 27.709912537035173
-longitude = 85.2939946709218
-
+ser = serial.Serial(                                                                                                                                                                                                                                                    port = '/dev/ttyACM0',
+    baudrate = 9600,
+    )
 
 def update_firebase(latitude, longitude):
     buses_ref = db.collection(u'Buses')
@@ -40,9 +42,21 @@ def update_firebase(latitude, longitude):
                 u'history': history_array
             })
             print("Created History doc")
-        print("success")
+        print("Success, Now we sleep")
         # Do not delete the break here
         break 
+    time.sleep(15)
 
-lats = 27.70026783492603, 85.33948577371456
-update_firebase(lats[0], lats[1])
+while True:
+    pushStr = ""
+
+    for line in ser.read():
+        pushStr += chr(line)
+
+    latitude, longitude = pushStr.split(",")
+    print(f"Read: {latitude}, {longitude}")
+    update_firebase(latitude, longitude)
+
+
+# lats = 27.70026783492603, 85.33948577371456
+# update_firebase(lats[0], lats[1])
